@@ -3,7 +3,12 @@ const refreshButton = document.getElementById('refresh');
 const listMessage = document.getElementById('list-message');
 const todoForm = document.getElementById('todo-form');
 const formMessage = document.getElementById('form-message');
-const submitButton = todoForm.querySelector('button[type="submit"]');
+const overlay = document.getElementById('form-overlay');
+const openFormButton = document.getElementById('open-form');
+const closeFormButton = document.getElementById('close-form');
+const submitButton = todoForm?.querySelector('button[type="submit"]');
+
+const STATUSES = ['New', 'In Progress', 'Completed'];
 
 const jsonHeaders = { 'Content-Type': 'application/json', Accept: 'application/json' };
 
@@ -55,6 +60,7 @@ const renderTodos = (items) => {
   items.forEach((todo) => {
     const item = document.createElement('li');
     item.className = 'todo-item';
+    item.dataset.id = todo.id;
 
     const header = document.createElement('div');
     header.className = 'todo-item-header';
@@ -67,6 +73,7 @@ const renderTodos = (items) => {
     status.className = 'todo-status';
     status.dataset.status = todo.status;
     status.textContent = todo.status;
+    status.title = 'Click to change status';
 
     header.append(title, status);
     item.appendChild(header);
@@ -87,8 +94,11 @@ const renderTodos = (items) => {
   });
 };
 
-const fetchTodos = async () => {
-  setMessage(listMessage, 'Loading todos…', 'success');
+const fetchTodos = async (options = {}) => {
+  const { silent = false } = options;
+  if (!silent) {
+    setMessage(listMessage, 'Loading todos…', 'success');
+  }
   try {
     const response = await fetch('/todos');
     if (!response.ok) {
@@ -96,7 +106,10 @@ const fetchTodos = async () => {
     }
     const todos = await response.json();
     renderTodos(todos);
-    setMessage(listMessage, `Showing ${todos.length} todo${todos.length === 1 ? '' : 's'}.`, 'success');
+    const message = todos.length
+      ? `Showing ${todos.length} todo${todos.length === 1 ? '' : 's'}.`
+      : 'No todos yet. Add one when you are ready!';
+    setMessage(listMessage, message, 'success');
   } catch (error) {
     console.error(error);
     setMessage(listMessage, 'Unable to load todos. Please try again.');
@@ -105,6 +118,40 @@ const fetchTodos = async () => {
 
 refreshButton?.addEventListener('click', () => {
   fetchTodos();
+});
+
+const closeForm = () => {
+  if (!overlay) {
+    return;
+  }
+  overlay.hidden = true;
+  setMessage(formMessage, '');
+  todoForm?.reset();
+};
+
+const openForm = () => {
+  if (!overlay) {
+    return;
+  }
+  overlay.hidden = false;
+  window.setTimeout(() => {
+    document.getElementById('title')?.focus();
+  }, 50);
+};
+
+openFormButton?.addEventListener('click', openForm);
+closeFormButton?.addEventListener('click', closeForm);
+
+overlay?.addEventListener('click', (event) => {
+  if (event.target === overlay) {
+    closeForm();
+  }
+});
+
+window.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && overlay && !overlay.hidden) {
+    closeForm();
+  }
 });
 
 if (todoForm) {
@@ -120,7 +167,9 @@ if (todoForm) {
       return;
     }
 
-    submitButton.disabled = true;
+    if (submitButton) {
+      submitButton.disabled = true;
+    }
     setMessage(formMessage, 'Creating todo…', 'success');
 
     const payload = { title, status };
@@ -142,14 +191,78 @@ if (todoForm) {
 
       todoForm.reset();
       setMessage(formMessage, 'Todo created successfully!', 'success');
-      await fetchTodos();
+      closeForm();
+      await fetchTodos({ silent: true });
+      setMessage(listMessage, 'Todo created successfully!', 'success');
     } catch (error) {
       console.error(error);
       setMessage(formMessage, 'Unable to create todo. Please try again.');
     } finally {
-      submitButton.disabled = false;
+      if (submitButton) {
+        submitButton.disabled = false;
+      }
     }
   });
 }
+
+const getNextStatus = (current) => {
+  const index = STATUSES.indexOf(current);
+  if (index === -1) {
+    return STATUSES[0];
+  }
+
+  return STATUSES[(index + 1) % STATUSES.length];
+};
+
+const updateTodoStatus = async (id, nextStatus, badge) => {
+  if (!id) {
+    return;
+  }
+
+  try {
+    badge?.classList.add('loading');
+    setMessage(listMessage, 'Updating status…', 'success');
+    const response = await fetch(`/todos/${id}/status`, {
+      method: 'PATCH',
+      headers: jsonHeaders,
+      body: JSON.stringify({ status: nextStatus })
+    });
+
+    if (!response.ok) {
+      const message = await response.text();
+      throw new Error(message || `Request failed with status ${response.status}`);
+    }
+
+    await fetchTodos({ silent: true });
+    setMessage(listMessage, `Status updated to ${nextStatus}.`, 'success');
+  } catch (error) {
+    console.error(error);
+    setMessage(listMessage, 'Unable to update status. Please try again.');
+  } finally {
+    badge?.classList.remove('loading');
+  }
+};
+
+todoList?.addEventListener('click', (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) {
+    return;
+  }
+
+  if (!target.classList.contains('todo-status')) {
+    return;
+  }
+
+  if (target.classList.contains('loading')) {
+    return;
+  }
+
+  const item = target.closest('.todo-item');
+  const todoId = item?.dataset.id;
+  const currentStatus = target.dataset.status || target.textContent || STATUSES[0];
+  const nextStatus = getNextStatus(currentStatus);
+
+  updateTodoStatus(todoId, nextStatus, target);
+});
 
 fetchTodos();
