@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Todo List</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <main class="container">
+    <header class="hero">
+      <h1>Todo List</h1>
+      <p>Track tasks, capture details, and mark progress.</p>
+    </header>
+
+    <section class="panel">
+      <h2>Create a Todo</h2>
+      <form id="todo-form" novalidate>
+        <div class="field">
+          <label class="label" for="title">Title</label>
+          <input id="title" name="title" class="input" type="text" maxlength="255" required />
+          <p class="hint">A short summary of the task.</p>
+        </div>
+
+        <div class="field">
+          <label class="label" for="description">Description <span class="optional">(optional)</span></label>
+          <textarea id="description" name="description" class="input" rows="3" maxlength="2000"></textarea>
+        </div>
+
+        <div class="field">
+          <label class="label" for="status">Status</label>
+          <select id="status" name="status" class="input">
+            <option value="New">New</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
+          </select>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="button">Create Todo</button>
+        </div>
+        <p id="form-message" class="message" role="alert" hidden></p>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="list-header">
+        <h2>Latest Todos</h2>
+        <button id="refresh" class="button button-secondary" type="button">Refresh</button>
+      </div>
+      <p id="list-message" class="message" role="alert" hidden></p>
+      <ul id="todos" class="todo-list" aria-live="polite"></ul>
+    </section>
+  </main>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
