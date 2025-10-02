@@ -13,6 +13,7 @@ COPY package*.json ./
 COPY tsconfig*.json ./
 COPY nest-cli.json ./
 COPY src ./src
+COPY public ./public
 RUN npm run build
 
 FROM node:20-alpine AS runner
@@ -21,5 +22,6 @@ ENV NODE_ENV=production
 COPY package*.json ./
 RUN npm install --omit=dev
 COPY --from=builder /usr/src/app/dist ./dist
+COPY --from=builder /usr/src/app/public ./public
 EXPOSE 3000
 CMD ["node", "dist/main"]

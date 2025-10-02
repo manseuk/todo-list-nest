@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { DEFAULT_VISIBLE_STATUSES, TodoStatus } from './todo-status.enum';
 import { TodoEntity } from './todo.entity';
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { FilterTodosDto } from './dto/filter-todos.dto';
+import { UpdateTodoStatusDto } from './dto/update-todo-status.dto';
 
 @Injectable()
 export class TodosService {
@@ -30,6 +31,18 @@ export class TodosService {
       description: payload.description ?? null,
       status: payload.status ?? TodoStatus.NEW
     });
+
+    return this.todosRepository.save(todo);
+  }
+
+  async updateStatus(id: string, payload: UpdateTodoStatusDto): Promise<TodoEntity> {
+    const todo = await this.todosRepository.findOne({ where: { id } });
+
+    if (!todo) {
+      throw new NotFoundException(`Todo with id ${id} not found`);
+    }
+
+    todo.status = payload.status;
 
     return this.todosRepository.save(todo);
   }

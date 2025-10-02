@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { FilterTodosDto } from './dto/filter-todos.dto';
+import { UpdateTodoStatusDto } from './dto/update-todo-status.dto';
 import { TodoEntity } from './todo.entity';
 import { TodosService } from './todos.service';
 
@@ -16,5 +17,13 @@ export class TodosController {
   @Post()
   create(@Body() payload: CreateTodoDto): Promise<TodoEntity> {
     return this.todosService.create(payload);
+  }
+
+  @Patch(':id/status')
+  updateStatus(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() payload: UpdateTodoStatusDto
+  ): Promise<TodoEntity> {
+    return this.todosService.updateStatus(id, payload);
   }
 }

@@ -30,10 +30,12 @@ Ensure you have a PostgreSQL server running and the environment variables define
     "status": "New | In Progress | Completed" // optional, defaults to New
   }
   ```
+- `PATCH /todos/:id/status` — updates the status for the todo with the given `id`.
 
 ## Web UI
-- Visit `http://localhost:3000/` to access a lightweight interface for creating and browsing todos.
-- The page lists todos in reverse chronological order, highlights their status, and refreshes after a successful submission.
+- Visit `http://localhost:3000/` to access a lightweight interface for browsing todos.
+- Click **New Todo** to open the creation dialog; submissions refresh the list when complete.
+- Tap a todo's status pill to cycle through statuses without leaving the list.
 - Use the **Refresh** button to manually pull the latest data when testing outside the form workflow.
 
 ## Scripts
