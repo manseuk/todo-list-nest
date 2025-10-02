@@ -31,6 +31,11 @@ Ensure you have a PostgreSQL server running and the environment variables define
   }
   ```
 
+## Web UI
+- Visit `http://localhost:3000/` to access a lightweight interface for creating and browsing todos.
+- The page lists todos in reverse chronological order, highlights their status, and refreshes after a successful submission.
+- Use the **Refresh** button to manually pull the latest data when testing outside the form workflow.
+
 ## Scripts
 - `npm run build` — compiles TypeScript into `dist/`.
 - `npm run start:dev` — runs in watch mode using the Nest CLI.
