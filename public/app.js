@@ -120,13 +120,19 @@ refreshButton?.addEventListener('click', () => {
   fetchTodos();
 });
 
-const closeForm = () => {
+const closeForm = ({ focusTrigger = false, skipReset = false } = {}) => {
   if (!overlay) {
     return;
   }
   overlay.hidden = true;
   setMessage(formMessage, '');
-  todoForm?.reset();
+  if (!skipReset) {
+    todoForm?.reset();
+  }
+  openFormButton?.setAttribute('aria-expanded', 'false');
+  if (focusTrigger) {
+    openFormButton?.focus();
+  }
 };
 
 const openForm = () => {
@@ -134,25 +140,30 @@ const openForm = () => {
     return;
   }
   overlay.hidden = false;
+  openFormButton?.setAttribute('aria-expanded', 'true');
   window.setTimeout(() => {
     document.getElementById('title')?.focus();
   }, 50);
 };
 
+openFormButton?.setAttribute('aria-expanded', 'false');
+
 openFormButton?.addEventListener('click', openForm);
-closeFormButton?.addEventListener('click', closeForm);
+closeFormButton?.addEventListener('click', () => closeForm({ focusTrigger: true }));
 
 overlay?.addEventListener('click', (event) => {
   if (event.target === overlay) {
-    closeForm();
+    closeForm({ focusTrigger: true });
   }
 });
 
 window.addEventListener('keydown', (event) => {
   if (event.key === 'Escape' && overlay && !overlay.hidden) {
-    closeForm();
+    closeForm({ focusTrigger: true });
   }
 });
+
+closeForm({ skipReset: true });
 
 if (todoForm) {
   todoForm.addEventListener('submit', async (event) => {
@@ -189,9 +200,8 @@ if (todoForm) {
         throw new Error(message || `Request failed with status ${response.status}`);
       }
 
-      todoForm.reset();
       setMessage(formMessage, 'Todo created successfully!', 'success');
-      closeForm();
+      closeForm({ focusTrigger: true });
       await fetchTodos({ silent: true });
       setMessage(listMessage, 'Todo created successfully!', 'success');
     } catch (error) {

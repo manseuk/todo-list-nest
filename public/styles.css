@@ -239,6 +239,10 @@ body {
   z-index: 10;
 }
 
+.overlay[hidden] {
+  display: none !important;
+}
+
 .form-panel {
   max-width: 480px;
   width: min(100%, 520px);
